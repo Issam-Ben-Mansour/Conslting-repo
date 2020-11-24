@@ -4,34 +4,34 @@ import { from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Repository } from 'typeorm';
 import { AuthService } from '../auth/auth.service';
-import { Client } from './client.entity';
+import { Employee } from './employee.entity';
 
 @Injectable()
-export class ClientService {
+export class EmployeeService {
   constructor(
-    @InjectRepository(Client)
-    private clientRepository: Repository<Client>,
+    @InjectRepository(Employee)
+    private employeeRepository: Repository<Employee>,
     private authService: AuthService,
   ) {}
 
-  findAll(): Promise<Client[]> {
-    return this.clientRepository.find();
+  findAll(): Promise<Employee[]> {
+    return this.employeeRepository.find();
   }
 
   async create(data) {
-    const exists = await this.clientRepository.findOne({
+    const exists = await this.employeeRepository.findOne({
       where: { email: data.email },
     });
     if (exists === undefined) {
       if (exists === undefined) {
         const passHash = await this.authService.hashPassword(data.password);
-        let client: object = {
+        let employee: object = {
           name: data.name,
           password: passHash,
           email: data.email,
           phoneNumber: data.phoneNumber,
         };
-        return from(this.clientRepository.save(client)).pipe(
+        return from(this.employeeRepository.save(employee)).pipe(
           map((res: any) => {
             const { password, ...result } = res;
             return result;
@@ -45,18 +45,18 @@ export class ClientService {
     }
   }
 
-  findOne(id: string): Promise<Client> {
-    return this.clientRepository.findOne(id);
+  findOne(id: string): Promise<Employee> {
+    return this.employeeRepository.findOne(id);
   }
 
   async remove(email: string) {
-    await this.clientRepository.delete(email);
+    await this.employeeRepository.delete(email);
     return { delete: true };
   }
 
   async update(id, data) {
-    await this.clientRepository.update({ id }, data);
-    return this.clientRepository.findOne(id);
+    await this.employeeRepository.update({ id }, data);
+    return this.employeeRepository.findOne(id);
   }
 
   /**
@@ -66,7 +66,7 @@ export class ClientService {
    */
 
   findOneByUsername(email: any) {
-    return this.clientRepository.findOne({
+    return this.employeeRepository.findOne({
       where: { email },
     });
   }
@@ -92,18 +92,17 @@ export class ClientService {
 
   async validate(data) {
     console.log(data);
-    const theClient = await this.findOneByUsername(data.email);
-    if (theClient === undefined) {
+    const theEmployee = await this.findOneByUsername(data.email);
+    if (theEmployee === undefined) {
       throw new Error();
     }
-    console.log(theClient);
 
     const compare = await this.authService.ComparePassword(
-      theClient.password,
+      theEmployee.password,
       data.password,
     );
     if (compare) {
-      const { password, ...result } = theClient;
+      const { password, ...result } = theEmployee;
       return result;
     } else {
       throw false;
